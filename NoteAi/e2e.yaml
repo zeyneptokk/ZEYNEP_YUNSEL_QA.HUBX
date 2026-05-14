@@ -1,0 +1,229 @@
+# =============================================================================
+# NoteAI - End-to-End test
+# Run: maestro --udid <UDID> test e2e.yaml
+# Screenshots saved to ./screenshots/
+# =============================================================================
+appId: com.hubx.noteai
+---
+
+# ---------- 1. Launch app ----------------------------------------------------
+- launchApp:
+    appId: com.hubx.noteai
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Get Started"
+    timeout: 30000
+- takeScreenshot: screenshots/01_app_launched
+
+# ---------- 2. Terms of Use ------------------------------------------------
+- assertVisible: "Terms of Use"
+- tapOn:
+    point: "64%, 91%"
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: screenshots/02_terms_of_use_screen
+
+- launchApp:
+    appId: com.hubx.noteai
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Get Started"
+    timeout: 30000
+
+# ---------- 3. Privacy Policy ----------------------------------------------
+- assertVisible: "Privacy Policy"
+- tapOn:
+    point: "89%, 91%"
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: screenshots/03_privacy_policy_screen
+
+# ---------- 4. Back on Get Started ------------------------------------------
+- launchApp:
+    appId: com.hubx.noteai
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Get Started"
+    timeout: 30000
+- assertVisible: "Get Started"
+- takeScreenshot: screenshots/04_back_on_get_started
+
+# ---------- 5. Onboarding ---------------------------------------------------
+- tapOn:
+    text: "Get Started"
+    waitToSettleTimeoutMs: 0
+- repeat:
+    times: 15
+    commands:
+      - runFlow:
+          when:
+            notVisible:
+              text: ".*(Try for|Start Free Trial|3-Day Free Trial|Subscribe).*"
+          commands:
+            - runFlow:
+                when:
+                  visible: "Continue"
+                commands:
+                  - tapOn:
+                      text: "Continue"
+                      waitToSettleTimeoutMs: 500
+            - runFlow:
+                when:
+                  visible: "Allow"
+                commands:
+                  - tapOn: "Allow"
+- extendedWaitUntil:
+    visible:
+      text: ".*(Try for|Start Free Trial|3-Day Free Trial).*"
+    timeout: 90000
+- takeScreenshot: screenshots/05_onboarding_done
+
+# ---------- 6. 3-Day Free Trial -------
+- runFlow:
+    when:
+      visible:
+        text: ".*Try for.*"
+    commands:
+      - takeScreenshot: screenshots/06_paywall
+      - tapOn:
+          text: ".*Try for.*"
+      # Apple StoreKit confirm, Face ID is manual
+      - runFlow:
+          when:
+            visible: "Subscribe"
+          commands:
+            - tapOn: "Subscribe"
+      - runFlow:
+          when:
+            visible: "Confirm"
+          commands:
+            - tapOn: "Confirm"
+      - extendedWaitUntil:
+          visible: "You're All Set"
+          timeout: 90000
+      - tapOn: "OK"
+      - extendedWaitUntil:
+          visible:
+            text: ".*(All Notes|Record|New Note).*"
+          timeout: 30000
+      - takeScreenshot: screenshots/07_trial_activated
+
+# ---------- 7. Home screen --------------------------------------------------
+- assertVisible:
+    text: ".*(Note AI).*"
+- takeScreenshot: screenshots/08_home
+
+# ---------- 8. Upload audio & create note -----------------------------------
+- runFlow:
+    when:
+      visible: "New Note"
+    commands:
+      - tapOn: "New Note"
+- extendedWaitUntil:
+    visible:
+      text: ".*(Upload Audio).*"
+    timeout: 10000
+- tapOn:
+    text: ".*(Upload Audio).*"
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: screenshots/09_file_picker
+- tapOn:
+    point: "17%, 30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- runFlow:
+    when:
+      visible: "Done"
+    commands:
+      - tapOn: "Done"
+- extendedWaitUntil:
+    visible:
+      text: ".*(All Notes).*"
+    timeout: 180000
+- takeScreenshot: screenshots/10_note_created
+
+# ---------- 9. Note Detail --------------------------------------------------
+- runFlow:
+    when:
+      visible: "Today"
+    commands:
+      - tapOn:
+          below:
+            text: "Today"
+- extendedWaitUntil:
+    visible:
+      text: ".*(Note Tools|Transcript).*"
+    timeout: 30000
+- takeScreenshot: screenshots/11_note_detail
+
+# ---------- 10. Translate ---------------------------------------------------
+- tapOn: "Note Tools"
+- waitForAnimationToEnd:
+    timeout: 5000
+- runFlow:
+    when:
+      visible: "Translate"
+    commands:
+      - tapOn:
+          text: "Translate"
+- runFlow:
+    when:
+      notVisible:
+        text: ".*(Translate).*"
+    commands:
+      - tapOn:
+          point: "50%, 88%"
+- repeat:
+    times: 30
+    commands:
+      - runFlow:
+          when:
+            notVisible: "Spanish"
+          commands:
+            - swipe:
+                start: "50%, 80%"
+                end: "50%, 50%"
+                duration: 300
+- tapOn:
+    text: "Spanish"
+- runFlow:
+    when:
+      visible: "Done"
+    commands:
+      - tapOn: "Done"
+- extendedWaitUntil:
+    visible:
+      text: ".*(All Notes|Today).*"
+    timeout: 120000
+- takeScreenshot: screenshots/12_translation_done
+
+# ---------- 11. Open translated note ----------
+- tapOn:
+    below:
+      text: "Today"
+- extendedWaitUntil:
+    visible:
+      text: ".*(Note Tools|Transcript).*"
+    timeout: 30000
+- takeScreenshot: screenshots/13_translated_note
+
+# ---------- 12. Generate quiz -----------------------------------------------
+- tapOn: "Note Tools"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    point: "50%, 83%"
+- extendedWaitUntil:
+    visible:
+      text: ".*(Question 1|Q1|True|False|Submit Answer).*"
+    timeout: 120000
+- takeScreenshot: screenshots/14_quiz_generated
+- assertVisible:
+    text: ".*(Question 1|Q1|True|False|Submit Answer).*"
+- takeScreenshot: screenshots/15_done
